@@ -1,0 +1,27 @@
+{
+  "Serilog": {
+    "Using": [ "Serilog.Sinks.Console", "Serilog.Sinks.File" ],
+    "MinimumLevel": {
+      "Default": "Debug",
+      "Override": {
+        "MasterClassSagaPattern.Choregraphy": "Debug",
+        "Microsoft.EntityFrameworkCore": "Error"
+      }
+    },
+    "WriteTo:Console": {
+      "Name": "Console",
+      "Args": {
+        "outputTemplate": "[{Timestamp:HH:mm:ss.fff} {SourceContext}]{NewLine}[{Level}]{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}"
+      }
+    },
+    "WriteTo:File": {
+      "Name": "File",
+      "Args": {
+        "path": "Logs/log-.txt",
+        "rollingInterval": "Day",
+        "outputTemplate": "[{Timestamp:HH:mm:ss.fff} {SourceContext}]{NewLine}[{Level}]{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}"
+      }
+    },
+    "Enrich": [ "FromLogContext" ]
+  }
+}

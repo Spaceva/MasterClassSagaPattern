@@ -1,0 +1,23 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+Quantité :
+<input type="number" min="0" step="1" id="quantity" />
+<button type="button" onclick="Order()">Commander</button>
+
+<script type="text/javascript">
+    function Order() {
+        const quantity = parseInt(document.getElementById("quantity").value);
+        if (quantity != NaN) {
+            $.ajax({
+                url: 'Home/OrderNew',
+                type: 'post',
+                data: { quantity: quantity },
+                success: function (code_html, statut) {
+                    alert('Done !')
+                }
+            });
+        }
+    }
+</script>
