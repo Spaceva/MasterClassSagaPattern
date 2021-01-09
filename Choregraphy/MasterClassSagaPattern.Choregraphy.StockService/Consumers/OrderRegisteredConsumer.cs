@@ -53,9 +53,11 @@ namespace MasterClassSagaPattern.Choregraphy.StockService
                 return;
             }
 
-            logger.LogInformation($"'{stock.Quantity}' left in stock. Removing {quantity}.");
+            logger.LogInformation($"{stock.Quantity} left in stock. Removing {quantity}.");
 
             stock.Quantity -= quantity;
+
+            dbContext.StockBookings.Add(new StockBooking { Id = id, Quantity = quantity });
 
             await dbContext.SaveChangesAsync();
 

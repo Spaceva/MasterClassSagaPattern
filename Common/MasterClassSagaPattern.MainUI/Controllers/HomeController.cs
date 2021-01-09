@@ -27,11 +27,11 @@ namespace MasterClassSagaPattern.MainUI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult> Transactions()
+        public async Task<ActionResult> Payments()
         {
-            var transactions = await dbContext.Transactions.AsNoTracking().ToArrayAsync();
+            var payments = await dbContext.Payments.AsNoTracking().ToArrayAsync();
 
-            ViewBag.Transactions = transactions;
+            ViewBag.Payments = payments;
 
             return View();
         }
@@ -39,19 +39,19 @@ namespace MasterClassSagaPattern.MainUI.Controllers
         [HttpPost]
         public async Task<StatusCodeResult> AcceptPayment(Guid transactionId)
         {
-            var transaction = await dbContext.Transactions.FindAsync(transactionId);
+            var transaction = await dbContext.Payments.FindAsync(transactionId);
 
             if (transaction is null)
             {
                 return NotFound();
             }
 
-            if (transaction.PaymentStatus.HasValue)
+            if (transaction.Status != Payment.PaymentStatus.Pending)
             {
                 return BadRequest();
             }
 
-            transaction.PaymentStatus = true;
+            transaction.Status = Payment.PaymentStatus.Accepted;
 
             await dbContext.SaveChangesAsync();
 
@@ -65,19 +65,19 @@ namespace MasterClassSagaPattern.MainUI.Controllers
         [HttpPost]
         public async Task<StatusCodeResult> RefusePayment(Guid transactionId, string reason)
         {
-            var transaction = await dbContext.Transactions.FindAsync(transactionId);
+            var transaction = await dbContext.Payments.FindAsync(transactionId);
 
             if (transaction is null)
             {
                 return NotFound();
             }
 
-            if (transaction.PaymentStatus.HasValue)
+            if (transaction.Status != Payment.PaymentStatus.Pending)
             {
                 return BadRequest();
             }
 
-            transaction.PaymentStatus = false;
+            transaction.Status = Payment.PaymentStatus.Refused;
 
             await dbContext.SaveChangesAsync();
 
@@ -93,7 +93,7 @@ namespace MasterClassSagaPattern.MainUI.Controllers
         {
             var transactionId = Guid.NewGuid();
 
-            dbContext.Transactions.Add(new Transaction { Id = transactionId });
+            dbContext.Payments.Add(new Payment { Id = transactionId });
 
             await dbContext.SaveChangesAsync();
 

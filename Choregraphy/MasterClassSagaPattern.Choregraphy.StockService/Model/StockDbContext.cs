@@ -10,5 +10,6 @@ namespace MasterClassSagaPattern.Choregraphy.StockService
         }
 
         public virtual DbSet<Stock> Stocks { get; set; }
+        public virtual DbSet<StockBooking> StockBookings { get; set; }
     }
 }

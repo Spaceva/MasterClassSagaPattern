@@ -1,0 +1,66 @@
+﻿@{
+    ViewData["Title"] = "Transactions";
+    Payment[] transactions = (Payment[])ViewBag.Payments;
+}
+
+<table>
+    <tr>
+        <th>
+            Transaction ID
+        </th>
+        <th>
+            Status
+        </th>
+        <th>
+            Action
+        </th>
+    </tr>
+    @foreach (var transaction in transactions)
+    {
+        <tr>
+            <td>
+                @transaction.Id
+            </td>
+            <td id="status_@transaction.Id">
+                @transaction.Status
+            </td>
+            <td id="buttons_@transaction.Id">
+                @if (transaction.Status == Payment.PaymentStatus.Pending)
+                {
+                    <button type="button" onclick="Accept('@transaction.Id')">Accepter</button>
+                    <button type="button" onclick="Deny('@transaction.Id')">Refuser</button>
+                }
+            </td>
+        </tr>
+    }
+</table>
+
+<script type="text/javascript">
+    function Accept(transactionId) {
+        $.ajax({
+            url: 'AcceptPayment',
+            type: 'post',
+            data: { transactionId: transactionId },
+            success: function (code_html, statut) {
+                document.getElementById('status_' + transactionId).innerHTML = 'Accepted';
+                document.getElementById('buttons_' + transactionId).innerHTML = '';
+            }, error: function (code_html, statut) {
+                alert("Une erreur a eu lieu");
+            }
+        });
+    }
+
+    function Deny(transactionId) {
+        $.ajax({
+            url: 'RefusePayment',
+            type: 'post',
+            data: { transactionId: transactionId, reason: 'Utilisateur' },
+            success: function (code_html, statut) {
+                document.getElementById('status_' + transactionId).innerHTML = 'Refused';
+                document.getElementById('buttons_' + transactionId).innerHTML = '';
+            }, error: function (code_html, statut) {
+                alert("Une erreur a eu lieu");
+            }
+        });
+    }
+</script>

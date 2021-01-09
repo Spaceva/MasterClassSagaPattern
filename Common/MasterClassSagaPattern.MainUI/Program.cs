@@ -1,5 +1,4 @@
 using MassTransit.Context;
-using MasterClassSagaPattern.Common;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Serilog;
@@ -17,18 +16,19 @@ namespace MasterClassSagaPattern.MainUI
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-               .ConfigureAppConfiguration(HostingHelper.ConfigureDevOps)
                .ConfigureWebHostDefaults(webBuilder =>
                {
                    webBuilder.UseStartup<Startup>().UseSerilog(ConfigureLogging);
                });
 
-
         public static void ConfigureLogging(WebHostBuilderContext hostingContext, LoggerConfiguration loggerConfiguration)
         {
-            loggerConfiguration.ReadFrom.Configuration(hostingContext.Configuration);
-            Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
+            loggerConfiguration.WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss.fff} {SourceContext}]{NewLine}[{Level}]{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}")
+                               .MinimumLevel.Debug()
+                               .MinimumLevel.Override("Microsoft.AspNetCore", Serilog.Events.LogEventLevel.Error)
+                               .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Error);
             Serilog.Debugging.SelfLog.Enable(Console.Error);
+            Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
             LogContext.ConfigureCurrentLogContext();
         }
     }

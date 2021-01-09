@@ -20,11 +20,12 @@ namespace MasterClassSagaPattern.MainUI
         {
             services.AddMassTransit(cfgMassTransit =>
             {
+                cfgMassTransit.AddConsumer<PaymentCancelledConsumer>();
                 cfgMassTransit.AddBus(registrationContext =>
                 {
                     return Bus.Factory.CreateUsingRabbitMq(cfgBus =>
                     {
-                        cfgBus.Host("localhost", configuration.GetValue<string>("BusVirtualHost"), cfgHost =>
+                        cfgBus.Host("spacevanas", configuration.GetValue<string>("BusVirtualHost"), cfgHost =>
                         {
                             cfgHost.Username("guest");
                             cfgHost.Password("guest");

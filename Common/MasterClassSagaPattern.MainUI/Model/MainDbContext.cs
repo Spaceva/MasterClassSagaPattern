@@ -9,6 +9,6 @@ namespace MasterClassSagaPattern.MainUI
         {
         }
 
-        public virtual DbSet<Transaction> Transactions { get; set; }
+        public virtual DbSet<Payment> Payments { get; set; }
     }
 }

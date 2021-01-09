@@ -20,7 +20,6 @@ namespace MasterClassSagaPattern.Orchestration.SagaExecutionCoordinator
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .ConfigureAppConfiguration(HostingHelper.ConfigureDevOps)
                 .ConfigureServices(ConfigureServiceCollection)
                 .UseSerilog(HostingHelper.ConfigureLogging);
 
@@ -34,7 +33,7 @@ namespace MasterClassSagaPattern.Orchestration.SagaExecutionCoordinator
                 {
                     return Bus.Factory.CreateUsingRabbitMq(cfgBus =>
                     {
-                        cfgBus.Host("localhost", "orchestration", cfgHost =>
+                        cfgBus.Host("spacevanas", "orchestration", cfgHost =>
                         {
                             cfgHost.Username("guest");
                             cfgHost.Password("guest");

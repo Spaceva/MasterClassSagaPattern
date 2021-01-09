@@ -16,7 +16,6 @@ namespace MasterClassSagaPattern.Choregraphy.StockService
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .ConfigureAppConfiguration(HostingHelper.ConfigureDevOps)
                 .ConfigureServices(ConfigureServiceCollection)
                 .UseSerilog(HostingHelper.ConfigureLogging);
 

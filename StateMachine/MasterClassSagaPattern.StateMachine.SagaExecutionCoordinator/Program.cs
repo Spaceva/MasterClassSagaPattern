@@ -1,6 +1,5 @@
 ﻿using GreenPipes;
 using MassTransit;
-using MassTransit.Saga;
 using MasterClassSagaPattern.Common;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -20,7 +19,6 @@ namespace MasterClassSagaPattern.StateMachine.SagaExecutionCoordinator
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .ConfigureAppConfiguration(HostingHelper.ConfigureDevOps)
                 .ConfigureServices(ConfigureServiceCollection)
                 .UseSerilog(HostingHelper.ConfigureLogging);
 
@@ -34,7 +32,7 @@ namespace MasterClassSagaPattern.StateMachine.SagaExecutionCoordinator
                 {
                     return Bus.Factory.CreateUsingRabbitMq(cfgBus =>
                     {
-                        cfgBus.Host("localhost", "statemachine", cfgHost =>
+                        cfgBus.Host("spacevanas", "statemachine", cfgHost =>
                         {
                             cfgHost.Username("guest");
                             cfgHost.Password("guest");

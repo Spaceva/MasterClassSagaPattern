@@ -1,23 +1,21 @@
-$RootPath = $args[0]
-write-host $RootPath
-write-host "$RootPath\MasterClassSagaPattern.Choregraphy.OrderService\MasterClassSagaPattern.Choregraphy.OrderService.csproj"
+$RootPath = "../Common/MasterClassSagaPattern.MainUI"
+$RootPath = (Resolve-Path $RootPath).Path
+$BaseName = "MasterClassSagaPattern"
+$ServiceName = "MainUI"
+$CSProjPath = "$RootPath\$BaseName.$ServiceName.csproj"
+Write-Host "Calling $CSProjPath"
 $StartInfo = new-object System.Diagnostics.ProcessStartInfo
 $StartInfo.FileName = "$pshome\powershell.exe"
-$StartInfo.Arguments = "-NoExit -Command `$Host.UI.RawUI.WindowTitle=`'Orders`';dotnet run --project $RootPath\MasterClassSagaPattern.Choregraphy.OrderService\MasterClassSagaPattern.Choregraphy.OrderService.csproj --no-build"
+$StartInfo.Arguments = "-NoExit -Command `$Host.UI.RawUI.WindowTitle=`'$ServiceName`';dotnet run --project $CSProjPath --BusVirtualHost choregraphy --no-build"
 [System.Diagnostics.Process]::Start($StartInfo)
-$StartInfo = new-object System.Diagnostics.ProcessStartInfo
-$StartInfo.FileName = "$pshome\powershell.exe"
-$StartInfo.Arguments = "-NoExit -Command `$Host.UI.RawUI.WindowTitle=`'Delivery`';dotnet run --project $RootPath\MasterClassSagaPattern.Choregraphy.DeliveryService\MasterClassSagaPattern.Choregraphy.DeliveryService.csproj --no-build"
-[System.Diagnostics.Process]::Start($StartInfo)
-$StartInfo = new-object System.Diagnostics.ProcessStartInfo
-$StartInfo.FileName = "$pshome\powershell.exe"
-$StartInfo.Arguments = "-NoExit -Command `$Host.UI.RawUI.WindowTitle=`'Payment`';dotnet run --project $RootPath\MasterClassSagaPattern.Choregraphy.PaymentService\MasterClassSagaPattern.Choregraphy.PaymentService.csproj --no-build"
-[System.Diagnostics.Process]::Start($StartInfo)
-$StartInfo = new-object System.Diagnostics.ProcessStartInfo
-$StartInfo.FileName = "$pshome\powershell.exe"
-$StartInfo.Arguments = "-NoExit -Command `$Host.UI.RawUI.WindowTitle=`'Stocks`';dotnet run --project $RootPath\MasterClassSagaPattern.Choregraphy.StockService\MasterClassSagaPattern.Choregraphy.StockService.csproj --no-build"
-[System.Diagnostics.Process]::Start($StartInfo)
-$StartInfo = new-object System.Diagnostics.ProcessStartInfo
-$StartInfo.FileName = "$pshome\powershell.exe"
-$StartInfo.Arguments = "-NoExit -Command `$Host.UI.RawUI.WindowTitle=`'Billing`';dotnet run --project $RootPath\MasterClassSagaPattern.Choregraphy.BillingService\MasterClassSagaPattern.Choregraphy.BillingService.csproj --no-build"
-[System.Diagnostics.Process]::Start($StartInfo)
+
+$ServiceName = "OrderService"
+& ".\launchOne.ps1" $ServiceName
+$ServiceName = "DeliveryService"
+& ".\launchOne.ps1" $ServiceName
+$ServiceName = "PaymentService"
+& ".\launchOne.ps1" $ServiceName
+$ServiceName = "StockService"
+& ".\launchOne.ps1" $ServiceName
+$ServiceName = "BillingService"
+& ".\launchOne.ps1" $ServiceName
