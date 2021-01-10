@@ -57,6 +57,8 @@ namespace MasterClassSagaPattern.StateMachine.StockService
 
             stock.Quantity -= quantity;
 
+            dbContext.StockBookings.Add(new StockBooking { Quantity = quantity, Id = id });
+
             await dbContext.SaveChangesAsync();
 
             await context.Publish<StockBooked>(new { context.CorrelationId });

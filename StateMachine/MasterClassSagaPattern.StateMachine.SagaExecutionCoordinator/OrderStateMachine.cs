@@ -64,6 +64,7 @@ namespace MasterClassSagaPattern.StateMachine.SagaExecutionCoordinator
                 When(PaymentRefusedEvent)
                     .SendAsync(deliveryEndpoint, context => context.Init<CancelDelivery>(new { context.Instance.CorrelationId, context.Data.Reason }))
                     .SendAsync(billingEndpoint, context => context.Init<CancelBilling>(new { context.Instance.CorrelationId, context.Data.Reason }))
+                    .SendAsync(stocksEndpoint, context => context.Init<UnbookStock>(new { context.Instance.CorrelationId, context.Instance.Quantity }))
                     .TransitionTo(Final),
                 When(StockBookingFailedEvent)
                     .SendAsync(paymentEndpoint, context => context.Init<CancelPayment>(new { context.Instance.CorrelationId, context.Data.Reason }))

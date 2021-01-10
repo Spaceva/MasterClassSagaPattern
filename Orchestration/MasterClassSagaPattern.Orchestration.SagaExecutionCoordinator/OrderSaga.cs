@@ -126,6 +126,8 @@ namespace MasterClassSagaPattern.Orchestration.SagaExecutionCoordinator
             await endpoint.Send<CancelDelivery>(new { CorrelationId, context.Message.Reason });
             endpoint = await GetSendEndpoint(context, Constants.Queues.BILLING);
             await endpoint.Send<CancelBilling>(new { CorrelationId, context.Message.Reason });
+            endpoint = await GetSendEndpoint(context, Constants.Queues.STOCKS);
+            await endpoint.Send<UnbookStock>(new { CorrelationId, Quantity });
         }
 
         public Task Consume(ConsumeContext<DeliveryPrepared> context)

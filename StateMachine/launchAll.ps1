@@ -6,7 +6,7 @@ $CSProjPath = "$RootPath\$BaseName.$ServiceName.csproj"
 Write-Host "Calling $CSProjPath"
 $StartInfo = new-object System.Diagnostics.ProcessStartInfo
 $StartInfo.FileName = "$pshome\powershell.exe"
-$StartInfo.Arguments = "-NoExit -Command `$Host.UI.RawUI.WindowTitle=`'$ServiceName`';dotnet run --project $CSProjPath --BusVirtualHost statemachine --no-build"
+$StartInfo.Arguments = "-NoExit -Command `$Host.UI.RawUI.WindowTitle=`'$ServiceName`';dotnet run --project $CSProjPath --BusVirtualHost statemachine"
 [System.Diagnostics.Process]::Start($StartInfo)
 
 $ServiceName = "OrderService"
@@ -18,4 +18,6 @@ $ServiceName = "PaymentService"
 $ServiceName = "StockService"
 & ".\launchOne.ps1" $ServiceName
 $ServiceName = "BillingService"
+& ".\launchOne.ps1" $ServiceName
+$ServiceName = "SagaExecutionCoordinator"
 & ".\launchOne.ps1" $ServiceName
