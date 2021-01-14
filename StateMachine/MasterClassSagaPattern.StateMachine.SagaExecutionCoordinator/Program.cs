@@ -32,7 +32,7 @@ namespace MasterClassSagaPattern.StateMachine.SagaExecutionCoordinator
                 {
                     return Bus.Factory.CreateUsingRabbitMq(cfgBus =>
                     {
-                        cfgBus.Host("spacevanas", "statemachine", cfgHost =>
+                        cfgBus.Host("localhost", "statemachine", cfgHost =>
                         {
                             cfgHost.Username("guest");
                             cfgHost.Password("guest");

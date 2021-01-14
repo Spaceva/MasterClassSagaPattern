@@ -20,7 +20,7 @@ namespace MasterClassSagaPattern.Common
                 {
                     return Bus.Factory.CreateUsingRabbitMq(cfgBus =>
                     {
-                        cfgBus.Host("spacevanas", virtualHost, cfgHost =>
+                        cfgBus.Host("localhost", virtualHost, cfgHost =>
                         {
                             cfgHost.Username("guest");
                             cfgHost.Password("guest");

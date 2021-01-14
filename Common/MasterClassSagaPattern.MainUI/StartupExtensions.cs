@@ -25,7 +25,7 @@ namespace MasterClassSagaPattern.MainUI
                 {
                     return Bus.Factory.CreateUsingRabbitMq(cfgBus =>
                     {
-                        cfgBus.Host("spacevanas", configuration.GetValue<string>("BusVirtualHost"), cfgHost =>
+                        cfgBus.Host("localhost", configuration.GetValue<string>("BusVirtualHost"), cfgHost =>
                         {
                             cfgHost.Username("guest");
                             cfgHost.Password("guest");

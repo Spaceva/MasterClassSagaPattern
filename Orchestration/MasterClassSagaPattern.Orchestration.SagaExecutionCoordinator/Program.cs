@@ -33,7 +33,7 @@ namespace MasterClassSagaPattern.Orchestration.SagaExecutionCoordinator
                 {
                     return Bus.Factory.CreateUsingRabbitMq(cfgBus =>
                     {
-                        cfgBus.Host("spacevanas", "orchestration", cfgHost =>
+                        cfgBus.Host("localhost", "orchestration", cfgHost =>
                         {
                             cfgHost.Username("guest");
                             cfgHost.Password("guest");
