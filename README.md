@@ -20,3 +20,6 @@ Lancer `launchAll.ps1` dans .\Orchestration
 
 **OU**
 Lancer `launchAll.ps1` dans .\StateMachine
+
+## Equivalent Java
+[Saga Choregraphie by Emmanuel Harel](https://github.com/emmanuelHa/saga_choregraphie)
