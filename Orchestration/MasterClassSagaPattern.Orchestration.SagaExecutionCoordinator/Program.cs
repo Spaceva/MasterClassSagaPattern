@@ -35,8 +35,8 @@ namespace MasterClassSagaPattern.Orchestration.SagaExecutionCoordinator
                     {
                         cfgBus.Host("localhost", "orchestration", cfgHost =>
                         {
-                            cfgHost.Username("guest");
-                            cfgHost.Password("guest");
+                            cfgHost.Username("saga-demo");
+                            cfgHost.Password("saga-demo");
                         });
 
                         cfgBus.ReceiveEndpoint(PROGRAMNAME, cfgEndpoint =>

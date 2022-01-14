@@ -22,8 +22,8 @@ namespace MasterClassSagaPattern.Common
                     {
                         cfgBus.Host("localhost", virtualHost, cfgHost =>
                         {
-                            cfgHost.Username("guest");
-                            cfgHost.Password("guest");
+                            cfgHost.Username("saga-demo");
+                            cfgHost.Password("saga-demo");
                         });
 
                         cfgBus.ReceiveEndpoint(queueName, cfgEndpoint =>

@@ -34,8 +34,8 @@ namespace MasterClassSagaPattern.StateMachine.SagaExecutionCoordinator
                     {
                         cfgBus.Host("localhost", "statemachine", cfgHost =>
                         {
-                            cfgHost.Username("guest");
-                            cfgHost.Password("guest");
+                            cfgHost.Username("saga-demo");
+                            cfgHost.Password("saga-demo");
                         });
 
                         cfgBus.ReceiveEndpoint(PROGRAMNAME, cfgEndpoint =>
