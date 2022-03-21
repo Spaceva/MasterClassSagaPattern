@@ -1,8 +1,7 @@
 ﻿using System;
 
-namespace MasterClassSagaPattern.StateMachine.BillingService
+namespace MasterClassSagaPattern.StateMachine.BillingService;
+
+public class BillingNotFoundException : Exception
 {
-    public class BillingNotFoundException : Exception
-    {
-    }
 }

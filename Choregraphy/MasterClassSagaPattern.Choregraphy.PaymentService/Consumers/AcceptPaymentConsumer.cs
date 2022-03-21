@@ -3,42 +3,41 @@ using MasterClassSagaPattern.Messages;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 
-namespace MasterClassSagaPattern.Choregraphy.PaymentService
+namespace MasterClassSagaPattern.Choregraphy.PaymentService;
+
+public class AcceptPaymentConsumer : IConsumer<AcceptPayment>
 {
-    public class AcceptPaymentConsumer : IConsumer<AcceptPayment>
+    private readonly PaymentDbContext dbContext;
+    private readonly ILogger<AcceptPaymentConsumer> logger;
+
+    public AcceptPaymentConsumer(PaymentDbContext dbContext, ILogger<AcceptPaymentConsumer> logger)
     {
-        private readonly PaymentDbContext dbContext;
-        private readonly ILogger<AcceptPaymentConsumer> logger;
+        this.dbContext = dbContext;
+        this.logger = logger;
+    }
 
-        public AcceptPaymentConsumer(PaymentDbContext dbContext, ILogger<AcceptPaymentConsumer> logger)
+    public async Task Consume(ConsumeContext<AcceptPayment> context)
+    {
+        var id = context.CorrelationId.GetValueOrDefault();
+        var payment = await dbContext.Payments.FindAsync(id);
+
+        logger.LogInformation("Received {event} message with Id = '{id}'", nameof(AcceptPayment), id);
+
+        if (payment is null)
         {
-            this.dbContext = dbContext;
-            this.logger = logger;
+            logger.LogInformation("'{id}' does not exists in this context. Rejecting, will retry in a few.", id);
+
+            throw new PaymentNotFoundException();
         }
 
-        public async Task Consume(ConsumeContext<AcceptPayment> context)
-        {
-            var id = context.CorrelationId.GetValueOrDefault();
-            var payment = await dbContext.Payments.FindAsync(id);
+        logger.LogInformation("'{id}' exists in this context.", id);
 
-            logger.LogInformation($"Received {nameof(AcceptPayment)} message with Id = '{id}'");
+        payment.IsPaymentAccepted = true;
 
-            if (payment is null)
-            {
-                logger.LogInformation($"'{id}' does not exists in this context. Rejecting, will retry in a few.");
+        await dbContext.SaveChangesAsync();
 
-                throw new PaymentNotFoundException();
-            }
-            
-            logger.LogInformation($"'{id}' exists in this context.");
+        logger.LogInformation("'{id}' accepted.", id);
 
-            payment.IsPaymentAccepted = true;
-
-            await dbContext.SaveChangesAsync();
-
-            logger.LogInformation($"'{id}' accepted.");
-
-            await context.Publish<PaymentAccepted>(new { context.CorrelationId, payment.Amount });
-        }
+        await context.Publish<PaymentAccepted>(new { context.CorrelationId, payment.Amount });
     }
 }

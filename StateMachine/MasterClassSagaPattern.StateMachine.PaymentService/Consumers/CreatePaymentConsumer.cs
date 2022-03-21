@@ -3,33 +3,32 @@ using MasterClassSagaPattern.Messages;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 
-namespace MasterClassSagaPattern.StateMachine.PaymentService
+namespace MasterClassSagaPattern.StateMachine.PaymentService;
+
+public class CreatePaymentConsumer : IConsumer<CreatePayment>
 {
-    public class CreatePaymentConsumer : IConsumer<CreatePayment>
+    private readonly PaymentDbContext dbContext;
+    private readonly ILogger<CreatePaymentConsumer> logger;
+
+    public CreatePaymentConsumer(PaymentDbContext dbContext, ILogger<CreatePaymentConsumer> logger)
     {
-        private readonly PaymentDbContext dbContext;
-        private readonly ILogger<CreatePaymentConsumer> logger;
+        this.dbContext = dbContext;
+        this.logger = logger;
+    }
 
-        public CreatePaymentConsumer(PaymentDbContext dbContext, ILogger<CreatePaymentConsumer> logger)
-        {
-            this.dbContext = dbContext;
-            this.logger = logger;
-        }
+    public async Task Consume(ConsumeContext<CreatePayment> context)
+    {
+        var id = context.CorrelationId.GetValueOrDefault();
+        var amount = context.Message.Amount;
 
-        public async Task Consume(ConsumeContext<CreatePayment> context)
-        {
-            var id = context.CorrelationId.GetValueOrDefault();
-            var amount = context.Message.Amount;
+        logger.LogInformation("Received {command} message with Id = '{id}' and Amount = {amount}.", nameof(CreatePayment), id, amount);
 
-            logger.LogInformation($"Received {nameof(CreatePayment)} message with Id = '{id}' and Amount = {amount}.");
+        dbContext.Add(new Payment { Id = id, Amount = amount });
 
-            dbContext.Add(new Payment { Id = id, Amount = amount });
+        await dbContext.SaveChangesAsync();
 
-            await dbContext.SaveChangesAsync();
+        logger.LogInformation("Payment '{id}' created.", id);
 
-            logger.LogInformation($"Payment '{id}' created.");
-
-            await context.Publish<PaymentCreated>(new { context.CorrelationId, context.Message.Amount });
-        }
+        await context.Publish<PaymentCreated>(new { context.CorrelationId, context.Message.Amount });
     }
 }

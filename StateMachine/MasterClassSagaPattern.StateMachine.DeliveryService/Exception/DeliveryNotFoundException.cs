@@ -1,8 +1,7 @@
 ﻿using System;
 
-namespace MasterClassSagaPattern.StateMachine.DeliveryService
+namespace MasterClassSagaPattern.StateMachine.DeliveryService;
+
+public class DeliveryNotFoundException : Exception
 {
-    public class DeliveryNotFoundException : Exception
-    {
-    }
 }

@@ -1,10 +1,9 @@
 ﻿using MassTransit;
 using System;
 
-namespace MasterClassSagaPattern.Messages
+namespace MasterClassSagaPattern.Messages;
+
+public interface CreatePayment : CorrelatedBy<Guid>
 {
-    public interface CreatePayment : CorrelatedBy<Guid>
-    {
-        float Amount { get; }
-    }
+    float Amount { get; }
 }

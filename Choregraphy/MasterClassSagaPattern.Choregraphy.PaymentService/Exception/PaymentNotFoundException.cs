@@ -1,8 +1,7 @@
 ﻿using System;
 
-namespace MasterClassSagaPattern.Choregraphy.PaymentService
+namespace MasterClassSagaPattern.Choregraphy.PaymentService;
+
+public class PaymentNotFoundException : Exception
 {
-    public class PaymentNotFoundException : Exception
-    {
-    }
 }

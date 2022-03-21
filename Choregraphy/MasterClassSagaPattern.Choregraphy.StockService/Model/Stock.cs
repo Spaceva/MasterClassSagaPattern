@@ -1,8 +1,7 @@
-﻿namespace MasterClassSagaPattern.Choregraphy.StockService
+﻿namespace MasterClassSagaPattern.Choregraphy.StockService;
+
+public class Stock
 {
-    public class Stock
-    {
-        public int Id { get; set; }
-        public int Quantity { get; set; }
-    }
+    public int Id { get; set; }
+    public int Quantity { get; set; }
 }

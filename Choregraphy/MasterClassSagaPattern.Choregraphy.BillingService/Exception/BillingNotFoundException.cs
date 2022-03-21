@@ -1,8 +1,7 @@
 ﻿using System;
 
-namespace MasterClassSagaPattern.Choregraphy.BillingService
+namespace MasterClassSagaPattern.Choregraphy.BillingService;
+
+public class BillingNotFoundException : Exception
 {
-    public class BillingNotFoundException : Exception
-    {
-    }
 }

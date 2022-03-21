@@ -1,59 +1,50 @@
-﻿using GreenPipes;
-using MassTransit;
-using MassTransit.Saga;
+﻿using MassTransit;
 using MasterClassSagaPattern.Common;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using System;
 
-namespace MasterClassSagaPattern.Orchestration.SagaExecutionCoordinator
+namespace MasterClassSagaPattern.Orchestration.SagaExecutionCoordinator;
+
+public class Program
 {
-    public class Program
+    private const string PROGRAMNAME = Constants.Queues.SAGACOORDINATOR;
+
+    public static void Main(string[] args)
     {
-        private const string PROGRAMNAME = Constants.Queues.SAGACOORDINATOR;
+        CreateHostBuilder(args).Build().Run();
+    }
 
-        public static void Main(string[] args)
+    public static IHostBuilder CreateHostBuilder(string[] args) =>
+        Host.CreateDefaultBuilder(args)
+            .ConfigureServices(ConfigureServiceCollection)
+            .UseSerilog(HostingHelper.ConfigureLogging);
+
+    private static void ConfigureServiceCollection(HostBuilderContext hostingContext, IServiceCollection services)
+    {
+        services.AddMassTransit(cfgMassTransit =>
         {
-            CreateHostBuilder(args).Build().Run();
-        }
-
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureServices(ConfigureServiceCollection)
-                .UseSerilog(HostingHelper.ConfigureLogging);
-
-        private static void ConfigureServiceCollection(HostBuilderContext hostingContext, IServiceCollection services)
-        {
-            services.AddMassTransit(cfgMassTransit =>
+            cfgMassTransit.AddSaga<OrderSaga>().InMemoryRepository();
+            cfgMassTransit.UsingRabbitMq((context, cfgBus) =>
             {
-                cfgMassTransit.AddSaga<OrderSaga>().InMemoryRepository();
-                
-                cfgMassTransit.AddBus(registrationContext =>
+                cfgBus.Host("localhost", "orchestration", cfgHost =>
                 {
-                    return Bus.Factory.CreateUsingRabbitMq(cfgBus =>
+                    cfgHost.Username("saga-demo");
+                    cfgHost.Password("saga-demo");
+                });
+
+                cfgBus.ReceiveEndpoint(PROGRAMNAME, cfgEndpoint =>
+                {
+                    cfgEndpoint.ConfigureSagas(context);
+                    cfgEndpoint.UseMessageRetry(cfgRetry =>
                     {
-                        cfgBus.Host("localhost", "orchestration", cfgHost =>
-                        {
-                            cfgHost.Username("saga-demo");
-                            cfgHost.Password("saga-demo");
-                        });
-
-                        cfgBus.ReceiveEndpoint(PROGRAMNAME, cfgEndpoint =>
-                        {
-                            cfgEndpoint.Saga(new InMemorySagaRepository<OrderSaga>());
-                            cfgEndpoint.UseMessageRetry(cfgRetry =>
-                            {
-                                cfgRetry.Interval(2, TimeSpan.FromSeconds(5));
-                            });
-                        });
-
-                        cfgBus.UseInMemoryOutbox();
+                        cfgRetry.Interval(2, TimeSpan.FromSeconds(5));
                     });
                 });
-            });
 
-            services.StartBusOnBoot();
-        }
+                cfgBus.UseInMemoryOutbox();
+            });
+        });
     }
 }

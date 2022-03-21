@@ -1,8 +1,7 @@
 ﻿using System;
 
-namespace MasterClassSagaPattern.Choregraphy.DeliveryService
+namespace MasterClassSagaPattern.Choregraphy.DeliveryService;
+
+public class DeliveryNotFoundException : Exception
 {
-    public class DeliveryNotFoundException : Exception
-    {
-    }
 }

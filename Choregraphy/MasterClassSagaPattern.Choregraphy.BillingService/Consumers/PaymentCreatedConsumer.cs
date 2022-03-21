@@ -4,38 +4,37 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 
-namespace MasterClassSagaPattern.Choregraphy.BillingService
+namespace MasterClassSagaPattern.Choregraphy.BillingService;
+
+public class PaymentCreatedConsumer : IConsumer<PaymentCreated>
 {
-    public class PaymentCreatedConsumer : IConsumer<PaymentCreated>
+    private readonly BillingDbContext dbContext;
+    private readonly ILogger<PaymentCreatedConsumer> logger;
+
+    public PaymentCreatedConsumer(BillingDbContext dbContext, ILogger<PaymentCreatedConsumer> logger)
     {
-        private readonly BillingDbContext dbContext;
-        private readonly ILogger<PaymentCreatedConsumer> logger;
+        this.dbContext = dbContext;
+        this.logger = logger;
+    }
 
-        public PaymentCreatedConsumer(BillingDbContext dbContext, ILogger<PaymentCreatedConsumer> logger)
-        {
-            this.dbContext = dbContext;
-            this.logger = logger;
-        }
+    public async Task Consume(ConsumeContext<PaymentCreated> context)
+    {
+        var id = context.CorrelationId.GetValueOrDefault();
+        var quantity = context.Message.Quantity;
+        var amount = context.Message.Amount;
 
-        public async Task Consume(ConsumeContext<PaymentCreated> context)
-        {
-            var id = context.CorrelationId.GetValueOrDefault();
-            var quantity = context.Message.Quantity;
-            var amount = context.Message.Amount;
+        logger.LogInformation("Received payment with { Id '{id}', Quantity = {quantity}, Amount = {amount}€ }. Processing...", id, quantity, amount);
 
-            logger.LogInformation($"Received payment with {{ Id '{id}', Quantity = {quantity}, Amount = {amount}€ }}. Processing...");
+        await Task.Delay(TimeSpan.FromSeconds(5));
 
-            await Task.Delay(TimeSpan.FromSeconds(5));
+        var billing = new Billing { Id = id };
 
-            var billing = new Billing { Id = id };
+        dbContext.Add(billing);
 
-            dbContext.Add(billing);
+        await dbContext.SaveChangesAsync();
 
-            await dbContext.SaveChangesAsync();
+        logger.LogInformation($"Processed.");
 
-            logger.LogInformation($"Processed.");
-
-            await context.Publish<BillingCompleted>(new { context.CorrelationId });
-        }
+        await context.Publish<BillingCompleted>(new { context.CorrelationId });
     }
 }

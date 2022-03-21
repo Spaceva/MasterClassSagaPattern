@@ -1,8 +1,7 @@
 ﻿using System;
 
-namespace MasterClassSagaPattern.StateMachine.PaymentService
+namespace MasterClassSagaPattern.StateMachine.PaymentService;
+
+public class PaymentNotFoundException : Exception
 {
-    public class PaymentNotFoundException : Exception
-    {
-    }
 }

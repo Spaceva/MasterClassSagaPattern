@@ -3,57 +3,56 @@ using MasterClassSagaPattern.Messages;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 
-namespace MasterClassSagaPattern.Choregraphy.DeliveryService
-{
-    public class BillingCompletedConsumer : IConsumer<BillingCompleted>
-    {
-        private readonly DeliveryDbContext dbContext;
-        private readonly ILogger<BillingCompletedConsumer> logger;
+namespace MasterClassSagaPattern.Choregraphy.DeliveryService;
 
-        public BillingCompletedConsumer(DeliveryDbContext dbContext, ILogger<BillingCompletedConsumer> logger)
+public class BillingCompletedConsumer : IConsumer<BillingCompleted>
+{
+    private readonly DeliveryDbContext dbContext;
+    private readonly ILogger<BillingCompletedConsumer> logger;
+
+    public BillingCompletedConsumer(DeliveryDbContext dbContext, ILogger<BillingCompletedConsumer> logger)
+    {
+        this.dbContext = dbContext;
+        this.logger = logger;
+    }
+
+    public async Task Consume(ConsumeContext<BillingCompleted> context)
+    {
+        var id = context.CorrelationId.GetValueOrDefault();
+
+        logger.LogInformation("Received {event} message with Id = '{id}'", nameof(BillingCompleted), id);
+
+        var delivery = await dbContext.Deliveries.FindAsync(id);
+
+        if (delivery is null)
         {
-            this.dbContext = dbContext;
-            this.logger = logger;
+            logger.LogInformation("'{id}' does not exists in this context. Rejecting, will retry in a few.", id);
+
+            throw new DeliveryNotFoundException();
         }
 
-        public async Task Consume(ConsumeContext<BillingCompleted> context)
+        logger.LogInformation("'{id}' exists in this context.", id);
+
+        delivery.IsBillingCompleted = true;
+        var shouldSendIsShippedMessage = false;
+
+        if (delivery.IsBillingCompleted
+            && delivery.IsPaymentAccepted
+            && delivery.IsStockBooked)
         {
-            var id = context.CorrelationId.GetValueOrDefault();
+            logger.LogInformation("'{id}' can be shipped !", id);
 
-            logger.LogInformation($"Received {nameof(BillingCompleted)} message with Id = '{id}'");
+            delivery.IsShipped = true;
+            shouldSendIsShippedMessage = true;
+        }
 
-            var delivery = await dbContext.Deliveries.FindAsync(id);
+        await dbContext.SaveChangesAsync();
 
-            if (delivery is null)
-            {
-                logger.LogInformation($"'{id}' does not exists in this context. Rejecting, will retry in a few.");
+        logger.LogInformation("'{id}' updated.", id);
 
-                throw new DeliveryNotFoundException();
-            }
-
-            logger.LogInformation($"'{id}' exists in this context.");
-
-            delivery.IsBillingCompleted = true;
-            var shouldSendIsShippedMessage = false;
-
-            if (delivery.IsBillingCompleted
-                && delivery.IsPaymentAccepted
-                && delivery.IsStockBooked)
-            {
-                logger.LogInformation($"'{id}' can be shipped !");
-
-                delivery.IsShipped = true;
-                shouldSendIsShippedMessage = true;
-            }
-
-            await dbContext.SaveChangesAsync();
-
-            logger.LogInformation($"'{id}' updated.");
-
-            if (shouldSendIsShippedMessage)
-            {
-                await context.Publish<DeliveryStarted>(new { context.CorrelationId });
-            }
+        if (shouldSendIsShippedMessage)
+        {
+            await context.Publish<DeliveryStarted>(new { context.CorrelationId });
         }
     }
 }

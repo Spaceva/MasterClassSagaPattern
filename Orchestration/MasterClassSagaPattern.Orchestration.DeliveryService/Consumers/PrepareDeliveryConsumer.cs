@@ -3,33 +3,32 @@ using MasterClassSagaPattern.Messages;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 
-namespace MasterClassSagaPattern.Orchestration.DeliveryService
+namespace MasterClassSagaPattern.Orchestration.DeliveryService;
+
+public class PrepareDeliveryConsumer : IConsumer<PrepareDelivery>
 {
-    public class PrepareDeliveryConsumer : IConsumer<PrepareDelivery>
+    private readonly DeliveryDbContext dbContext;
+    private readonly ILogger<PrepareDeliveryConsumer> logger;
+
+    public PrepareDeliveryConsumer(DeliveryDbContext dbContext, ILogger<PrepareDeliveryConsumer> logger)
     {
-        private readonly DeliveryDbContext dbContext;
-        private readonly ILogger<PrepareDeliveryConsumer> logger;
+        this.dbContext = dbContext;
+        this.logger = logger;
+    }
 
-        public PrepareDeliveryConsumer(DeliveryDbContext dbContext, ILogger<PrepareDeliveryConsumer> logger)
-        {
-            this.dbContext = dbContext;
-            this.logger = logger;
-        }
+    public async Task Consume(ConsumeContext<PrepareDelivery> context)
+    {
+        var id = context.CorrelationId.GetValueOrDefault();
+        var address = context.Message.Address;
 
-        public async Task Consume(ConsumeContext<PrepareDelivery> context)
-        {
-            var id = context.CorrelationId.GetValueOrDefault();
-            var address = context.Message.Address;
+        logger.LogInformation("Received {command} message with Id = '{id}' and Address = '{address}'.", nameof(PrepareDelivery), id, address);
 
-            logger.LogInformation($"Received {nameof(PrepareDelivery)} message with Id = '{id}' and Address = '{address}'.");
+        dbContext.Add(new Delivery { Id = id, Address = address });
 
-            dbContext.Add(new Delivery { Id = id, Address = address });
+        await dbContext.SaveChangesAsync();
 
-            await dbContext.SaveChangesAsync();
+        logger.LogInformation("Delivery '{id}' created. Waiting for Payment, Stock and Billing services.", id);
 
-            logger.LogInformation($"Delivery '{id}' created. Waiting for Payment, Stock and Billing services.");
-
-            await context.Publish<DeliveryPrepared>(new { context.CorrelationId });
-        }
+        await context.Publish<DeliveryPrepared>(new { context.CorrelationId });
     }
 }

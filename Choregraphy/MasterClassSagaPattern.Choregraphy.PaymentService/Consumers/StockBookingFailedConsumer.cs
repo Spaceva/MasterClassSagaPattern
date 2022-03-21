@@ -3,37 +3,36 @@ using MasterClassSagaPattern.Messages;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 
-namespace MasterClassSagaPattern.Choregraphy.PaymentService
+namespace MasterClassSagaPattern.Choregraphy.PaymentService;
+
+public class StockBookingFailedConsumer : IConsumer<StockBookingFailed>
 {
-    public class StockBookingFailedConsumer : IConsumer<StockBookingFailed>
+    private readonly PaymentDbContext dbContext;
+    private readonly ILogger<StockBookingFailedConsumer> logger;
+
+    public StockBookingFailedConsumer(PaymentDbContext dbContext, ILogger<StockBookingFailedConsumer> logger)
     {
-        private readonly PaymentDbContext dbContext;
-        private readonly ILogger<StockBookingFailedConsumer> logger;
+        this.dbContext = dbContext;
+        this.logger = logger;
+    }
 
-        public StockBookingFailedConsumer(PaymentDbContext dbContext, ILogger<StockBookingFailedConsumer> logger)
+    public async Task Consume(ConsumeContext<StockBookingFailed> context)
+    {
+        var id = context.CorrelationId.GetValueOrDefault();
+        var reason = context.Message.Reason;
+        var payment = await dbContext.Payments.FindAsync(id);
+
+        if (payment is null)
         {
-            this.dbContext = dbContext;
-            this.logger = logger;
+            return;
         }
 
-        public async Task Consume(ConsumeContext<StockBookingFailed> context)
-        {
-            var id = context.CorrelationId.GetValueOrDefault();
-            var reason = context.Message.Reason;
-            var payment = await dbContext.Payments.FindAsync(id);
+        logger.LogInformation("'{id}' exists in this context. Deleting because of {event} message with reason = '{reason}'.", id, nameof(StockBookingFailed), reason);
 
-            if (payment is null)
-            {
-                return;
-            }
+        dbContext.Payments.Remove(payment);
 
-            logger.LogInformation($"'{id}' exists in this context. Deleting because of {nameof(StockBookingFailed)} message with reason = '{reason}'.");
+        await dbContext.SaveChangesAsync();
 
-            dbContext.Payments.Remove(payment);
-
-            await dbContext.SaveChangesAsync();
-
-            await context.Publish<PaymentCancelled>(new { context.CorrelationId });
-        }
+        await context.Publish<PaymentCancelled>(new { context.CorrelationId });
     }
 }

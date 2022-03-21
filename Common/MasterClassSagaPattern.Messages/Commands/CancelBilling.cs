@@ -1,10 +1,9 @@
 ﻿using MassTransit;
 using System;
 
-namespace MasterClassSagaPattern.Messages
+namespace MasterClassSagaPattern.Messages;
+
+public interface CancelBilling : CorrelatedBy<Guid>
 {
-    public interface CancelBilling : CorrelatedBy<Guid>
-    {
-        string Reason { get; }
-    }
+    string Reason { get; }
 }

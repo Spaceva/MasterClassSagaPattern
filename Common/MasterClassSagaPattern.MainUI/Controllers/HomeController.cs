@@ -5,101 +5,100 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Threading.Tasks;
 
-namespace MasterClassSagaPattern.MainUI.Controllers
+namespace MasterClassSagaPattern.MainUI.Controllers;
+
+public class HomeController : Controller
 {
-    public class HomeController : Controller
+    private readonly MainDbContext dbContext;
+    private readonly IPublishEndpoint publishEndpoint;
+    private readonly ISendEndpointProvider sendEndpointProvider;
+
+    public HomeController(MainDbContext dbContext, IPublishEndpoint publishEndpoint, ISendEndpointProvider sendEndpointProvider)
     {
-        private readonly MainDbContext dbContext;
-        private readonly IPublishEndpoint publishEndpoint;
-        private readonly ISendEndpointProvider sendEndpointProvider;
+        this.dbContext = dbContext;
+        this.publishEndpoint = publishEndpoint;
+        this.sendEndpointProvider = sendEndpointProvider;
+    }
 
-        public HomeController(MainDbContext dbContext, IPublishEndpoint publishEndpoint, ISendEndpointProvider sendEndpointProvider)
+    [HttpGet]
+    public ActionResult Index()
+    {
+        return View();
+    }
+
+    [HttpGet]
+    public async Task<ActionResult> Payments()
+    {
+        var payments = await dbContext.Payments.AsNoTracking().ToArrayAsync();
+
+        ViewBag.Payments = payments;
+
+        return View();
+    }
+
+    [HttpPost]
+    public async Task<StatusCodeResult> AcceptPayment(Guid transactionId)
+    {
+        var transaction = await dbContext.Payments.FindAsync(transactionId);
+
+        if (transaction is null)
         {
-            this.dbContext = dbContext;
-            this.publishEndpoint = publishEndpoint;
-            this.sendEndpointProvider = sendEndpointProvider;
+            return NotFound();
         }
 
-        [HttpGet]
-        public ActionResult Index()
+        if (transaction.Status != Payment.PaymentStatus.Pending)
         {
-            return View();
+            return BadRequest();
         }
 
-        [HttpGet]
-        public async Task<ActionResult> Payments()
+        transaction.Status = Payment.PaymentStatus.Accepted;
+
+        await dbContext.SaveChangesAsync();
+
+        var sendEndpoint = await sendEndpointProvider.GetSendEndpoint(new Uri("queue:payment"));
+
+        await sendEndpoint.Send<AcceptPayment>(new { CorrelationId = transactionId });
+
+        return Ok();
+    }
+
+    [HttpPost]
+    public async Task<StatusCodeResult> RefusePayment(Guid transactionId, string reason)
+    {
+        var transaction = await dbContext.Payments.FindAsync(transactionId);
+
+        if (transaction is null)
         {
-            var payments = await dbContext.Payments.AsNoTracking().ToArrayAsync();
-
-            ViewBag.Payments = payments;
-
-            return View();
+            return NotFound();
         }
 
-        [HttpPost]
-        public async Task<StatusCodeResult> AcceptPayment(Guid transactionId)
+        if (transaction.Status != Payment.PaymentStatus.Pending)
         {
-            var transaction = await dbContext.Payments.FindAsync(transactionId);
-
-            if (transaction is null)
-            {
-                return NotFound();
-            }
-
-            if (transaction.Status != Payment.PaymentStatus.Pending)
-            {
-                return BadRequest();
-            }
-
-            transaction.Status = Payment.PaymentStatus.Accepted;
-
-            await dbContext.SaveChangesAsync();
-
-            var sendEndpoint = await sendEndpointProvider.GetSendEndpoint(new Uri("queue:payment"));
-
-            await sendEndpoint.Send<AcceptPayment>(new { CorrelationId = transactionId });
-
-            return Ok();
+            return BadRequest();
         }
 
-        [HttpPost]
-        public async Task<StatusCodeResult> RefusePayment(Guid transactionId, string reason)
-        {
-            var transaction = await dbContext.Payments.FindAsync(transactionId);
+        transaction.Status = Payment.PaymentStatus.Refused;
 
-            if (transaction is null)
-            {
-                return NotFound();
-            }
+        await dbContext.SaveChangesAsync();
 
-            if (transaction.Status != Payment.PaymentStatus.Pending)
-            {
-                return BadRequest();
-            }
+        var sendEndpoint = await sendEndpointProvider.GetSendEndpoint(new Uri("queue:payment"));
 
-            transaction.Status = Payment.PaymentStatus.Refused;
+        await sendEndpoint.Send<RefusePayment>(new { CorrelationId = transactionId, Reason = reason });
 
-            await dbContext.SaveChangesAsync();
+        return Ok();
+    }
 
-            var sendEndpoint = await sendEndpointProvider.GetSendEndpoint(new Uri("queue:payment"));
+    [HttpPost]
+    public async Task<StatusCodeResult> OrderNew(int quantity)
+    {
+        var transactionId = Guid.NewGuid();
 
-            await sendEndpoint.Send<RefusePayment>(new { CorrelationId = transactionId, Reason = reason });
+        dbContext.Payments.Add(new Payment { Id = transactionId });
 
-            return Ok();
-        }
+        await dbContext.SaveChangesAsync();
 
-        [HttpPost]
-        public async Task<StatusCodeResult> OrderNew(int quantity)
-        {
-            var transactionId = Guid.NewGuid();
+        await publishEndpoint.Publish<OrderCreated>(new { CorrelationId = transactionId, Quantity = quantity, Address = "somewhere" });
 
-            dbContext.Payments.Add(new Payment { Id = transactionId });
-
-            await dbContext.SaveChangesAsync();
-
-            await publishEndpoint.Publish<OrderCreated>(new { CorrelationId = transactionId, Quantity = quantity, Address = "somewhere" });
-
-            return Ok();
-        }
+        return Ok();
     }
 }

@@ -1,8 +1,7 @@
-﻿namespace MasterClassSagaPattern.Orchestration.StockService
+﻿namespace MasterClassSagaPattern.Orchestration.StockService;
+
+public class Stock
 {
-    public class Stock
-    {
-        public int Id { get; set; }
-        public int Quantity { get; set; }
-    }
+    public int Id { get; set; }
+    public int Quantity { get; set; }
 }

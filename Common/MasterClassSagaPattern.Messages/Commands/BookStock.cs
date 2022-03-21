@@ -1,10 +1,9 @@
 ﻿using MassTransit;
 using System;
 
-namespace MasterClassSagaPattern.Messages
+namespace MasterClassSagaPattern.Messages;
+
+public interface BookStock : CorrelatedBy<Guid>
 {
-    public interface BookStock : CorrelatedBy<Guid>
-    {
-        int Quantity { get; }
-    }
+    int Quantity { get; }
 }

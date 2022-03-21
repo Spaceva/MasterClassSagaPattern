@@ -1,9 +1,8 @@
 ﻿using MassTransit;
 using System;
 
-namespace MasterClassSagaPattern.Messages
+namespace MasterClassSagaPattern.Messages;
+
+public interface BillingCompleted : CorrelatedBy<Guid>
 {
-    public interface BillingCompleted : CorrelatedBy<Guid>
-    {
-    }
 }

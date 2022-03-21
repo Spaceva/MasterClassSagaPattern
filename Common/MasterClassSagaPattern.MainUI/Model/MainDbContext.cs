@@ -1,14 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace MasterClassSagaPattern.MainUI
-{
-    public class MainDbContext : DbContext
-    {
-        public MainDbContext(DbContextOptions<MainDbContext> options)
-            : base(options)
-        {
-        }
+namespace MasterClassSagaPattern.MainUI;
 
-        public virtual DbSet<Payment> Payments { get; set; }
+public class MainDbContext : DbContext
+{
+    public MainDbContext(DbContextOptions<MainDbContext> options)
+        : base(options)
+    {
     }
+
+    public virtual DbSet<Payment> Payments { get; set; } = default!;
 }

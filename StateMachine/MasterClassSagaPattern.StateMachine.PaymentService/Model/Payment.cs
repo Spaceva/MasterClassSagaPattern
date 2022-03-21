@@ -1,15 +1,14 @@
 ﻿using System;
 
-namespace MasterClassSagaPattern.StateMachine.PaymentService
+namespace MasterClassSagaPattern.StateMachine.PaymentService;
+
+public class Payment
 {
-    public class Payment
-    {
-        public Guid Id { get; set; }
+    public Guid Id { get; set; }
 
-        public float Amount { get; set; }
+    public float Amount { get; set; }
 
-        public bool IsStockBooked { get; set; }
+    public bool IsStockBooked { get; set; }
 
-        public bool? IsPaymentAccepted { get; set; }
-    }
+    public bool? IsPaymentAccepted { get; set; }
 }

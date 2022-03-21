@@ -1,10 +1,9 @@
 ﻿using MassTransit;
 using System;
 
-namespace MasterClassSagaPattern.Messages
+namespace MasterClassSagaPattern.Messages;
+
+public interface PrepareDelivery : CorrelatedBy<Guid>
 {
-    public interface PrepareDelivery : CorrelatedBy<Guid>
-    {
-        string Address { get; }
-    }
+    string Address { get; }
 }

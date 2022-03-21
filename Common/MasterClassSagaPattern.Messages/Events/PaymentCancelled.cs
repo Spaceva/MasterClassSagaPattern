@@ -1,9 +1,8 @@
 ﻿using MassTransit;
 using System;
 
-namespace MasterClassSagaPattern.Messages
+namespace MasterClassSagaPattern.Messages;
+
+public interface PaymentCancelled : CorrelatedBy<Guid>
 {
-    public interface PaymentCancelled : CorrelatedBy<Guid>
-    {
-    }
 }

@@ -3,34 +3,33 @@ using MasterClassSagaPattern.Messages;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 
-namespace MasterClassSagaPattern.MainUI
+namespace MasterClassSagaPattern.MainUI;
+
+public class PaymentCancelledConsumer : IConsumer<PaymentCancelled>
 {
-    public class PaymentCancelledConsumer : IConsumer<PaymentCancelled>
+    private readonly MainDbContext dbContext;
+    private readonly ILogger<PaymentCancelledConsumer> logger;
+
+    public PaymentCancelledConsumer(MainDbContext dbContext, ILogger<PaymentCancelledConsumer> logger)
     {
-        private readonly MainDbContext dbContext;
-        private readonly ILogger<PaymentCancelledConsumer> logger;
+        this.dbContext = dbContext;
+        this.logger = logger;
+    }
 
-        public PaymentCancelledConsumer(MainDbContext dbContext, ILogger<PaymentCancelledConsumer> logger)
+    public async Task Consume(ConsumeContext<PaymentCancelled> context)
+    {
+        var id = context.CorrelationId.GetValueOrDefault();
+        var billing = await dbContext.Payments.FindAsync(id);
+
+        if (billing is null)
         {
-            this.dbContext = dbContext;
-            this.logger = logger;
+            return;
         }
 
-        public async Task Consume(ConsumeContext<PaymentCancelled> context)
-        {
-            var id = context.CorrelationId.GetValueOrDefault();
-            var billing = await dbContext.Payments.FindAsync(id);
+        logger.LogInformation($"'{id}' exists in this context. Updating because of {nameof(PaymentCancelled)} message.");
 
-            if (billing is null)
-            {
-                return;
-            }
+        billing.Status = Payment.PaymentStatus.Cancelled;
 
-            logger.LogInformation($"'{id}' exists in this context. Updating because of {nameof(PaymentCancelled)} message.");
-
-            billing.Status = Payment.PaymentStatus.Cancelled;
-
-            await dbContext.SaveChangesAsync();
-        }
+        await dbContext.SaveChangesAsync();
     }
 }

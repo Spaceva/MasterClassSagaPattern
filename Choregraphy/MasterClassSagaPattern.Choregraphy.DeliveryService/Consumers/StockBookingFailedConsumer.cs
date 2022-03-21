@@ -3,37 +3,36 @@ using MasterClassSagaPattern.Messages;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 
-namespace MasterClassSagaPattern.Choregraphy.DeliveryService
+namespace MasterClassSagaPattern.Choregraphy.DeliveryService;
+
+public class StockBookingFailedConsumer : IConsumer<StockBookingFailed>
 {
-    public class StockBookingFailedConsumer : IConsumer<StockBookingFailed>
+    private readonly DeliveryDbContext dbContext;
+    private readonly ILogger<StockBookingFailedConsumer> logger;
+
+    public StockBookingFailedConsumer(DeliveryDbContext dbContext, ILogger<StockBookingFailedConsumer> logger)
     {
-        private readonly DeliveryDbContext dbContext;
-        private readonly ILogger<StockBookingFailedConsumer> logger;
+        this.dbContext = dbContext;
+        this.logger = logger;
+    }
 
-        public StockBookingFailedConsumer(DeliveryDbContext dbContext, ILogger<StockBookingFailedConsumer> logger)
+    public async Task Consume(ConsumeContext<StockBookingFailed> context)
+    {
+        var id = context.CorrelationId.GetValueOrDefault();
+        var reason = context.Message.Reason;
+        var delivery = await dbContext.Deliveries.FindAsync(id);
+
+        if (delivery is null)
         {
-            this.dbContext = dbContext;
-            this.logger = logger;
+            return;
         }
 
-        public async Task Consume(ConsumeContext<StockBookingFailed> context)
-        {
-            var id = context.CorrelationId.GetValueOrDefault();
-            var reason = context.Message.Reason;
-            var delivery = await dbContext.Deliveries.FindAsync(id);
+        logger.LogInformation("'{id}' exists in this context. Deleting because of {event} message with reason = '{reason}'.", id, nameof(StockBookingFailed), reason);
 
-            if (delivery is null)
-            {
-                return;
-            }
+        dbContext.Deliveries.Remove(delivery);
 
-            logger.LogInformation($"'{id}' exists in this context. Deleting because of {nameof(StockBookingFailed)} message with reason = '{reason}'.");
+        await dbContext.SaveChangesAsync();
 
-            dbContext.Deliveries.Remove(delivery);
-
-            await dbContext.SaveChangesAsync();
-
-            await context.Publish<DeliveryCancelled>(new { context.CorrelationId });
-        }
+        await context.Publish<DeliveryCancelled>(new { context.CorrelationId });
     }
 }

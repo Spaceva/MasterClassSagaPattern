@@ -1,14 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace MasterClassSagaPattern.Orchestration.BillingService
-{
-    public class BillingDbContext : DbContext
-    {
-        public BillingDbContext(DbContextOptions<BillingDbContext> options)
-            : base(options)
-        {
-        }
+namespace MasterClassSagaPattern.Orchestration.BillingService;
 
-        public virtual DbSet<Billing> Billings { get; set; }
+public class BillingDbContext : DbContext
+{
+    public BillingDbContext(DbContextOptions<BillingDbContext> options)
+        : base(options)
+    {
     }
+
+    public virtual DbSet<Billing> Billings { get; set; } = default!;
 }

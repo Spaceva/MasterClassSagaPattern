@@ -3,36 +3,35 @@ using MasterClassSagaPattern.Messages;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 
-namespace MasterClassSagaPattern.Orchestration.DeliveryService
+namespace MasterClassSagaPattern.Orchestration.DeliveryService;
+
+public class CancelDeliveryConsumer : IConsumer<CancelDelivery>
 {
-    public class CancelDeliveryConsumer : IConsumer<CancelDelivery>
+    private readonly DeliveryDbContext dbContext;
+    private readonly ILogger<CancelDeliveryConsumer> logger;
+
+    public CancelDeliveryConsumer(DeliveryDbContext dbContext, ILogger<CancelDeliveryConsumer> logger)
     {
-        private readonly DeliveryDbContext dbContext;
-        private readonly ILogger<CancelDeliveryConsumer> logger;
+        this.dbContext = dbContext;
+        this.logger = logger;
+    }
 
-        public CancelDeliveryConsumer(DeliveryDbContext dbContext, ILogger<CancelDeliveryConsumer> logger)
+    public async Task Consume(ConsumeContext<CancelDelivery> context)
+    {
+        var id = context.CorrelationId.GetValueOrDefault();
+        var delivery = await dbContext.Deliveries.FindAsync(id);
+
+        if (delivery is null)
         {
-            this.dbContext = dbContext;
-            this.logger = logger;
+            return;
         }
 
-        public async Task Consume(ConsumeContext<CancelDelivery> context)
-        {
-            var id = context.CorrelationId.GetValueOrDefault();
-            var delivery = await dbContext.Deliveries.FindAsync(id);
+        logger.LogInformation("'{id}' exists in this context. Deleting because of {command} message.", id, nameof(CancelDelivery));
 
-            if (delivery is null)
-            {
-                return;
-            }
+        dbContext.Deliveries.Remove(delivery);
 
-            logger.LogInformation($"'{id}' exists in this context. Deleting because of {nameof(CancelDelivery)} message.");
+        await dbContext.SaveChangesAsync();
 
-            dbContext.Deliveries.Remove(delivery);
-
-            await dbContext.SaveChangesAsync();
-
-            await context.Publish<DeliveryCancelled>(new { context.CorrelationId });
-        }
+        await context.Publish<DeliveryCancelled>(new { context.CorrelationId });
     }
 }

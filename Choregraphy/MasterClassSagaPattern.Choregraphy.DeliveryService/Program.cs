@@ -3,27 +3,26 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 
-namespace MasterClassSagaPattern.Choregraphy.DeliveryService
+namespace MasterClassSagaPattern.Choregraphy.DeliveryService;
+
+public class Program
 {
-    public class Program
+    private const string PROGRAMNAME = Constants.Queues.DELIVERY;
+
+    public static void Main(string[] args)
     {
-        private const string PROGRAMNAME = Constants.Queues.DELIVERY;
+        CreateHostBuilder(args).Build().Run();
+    }
 
-        public static void Main(string[] args)
-        {
-            CreateHostBuilder(args).Build().Run();
-        }
+    public static IHostBuilder CreateHostBuilder(string[] args) =>
+        Host.CreateDefaultBuilder(args)
+            .ConfigureServices(ConfigureServiceCollection)
+            .UseSerilog(HostingHelper.ConfigureLogging);
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureServices(ConfigureServiceCollection)
-                .UseSerilog(HostingHelper.ConfigureLogging);
+    private static void ConfigureServiceCollection(HostBuilderContext hostingContext, IServiceCollection services)
+    {
+        services.ConfigureMassTransit<Program>("choregraphy", PROGRAMNAME);
 
-        private static void ConfigureServiceCollection(HostBuilderContext hostingContext, IServiceCollection services)
-        {
-            services.ConfigureMassTransit<Program>("choregraphy", PROGRAMNAME);
-
-            services.AddDatabase<DeliveryDbContext>(PROGRAMNAME);
-        }
+        services.AddDatabase<DeliveryDbContext>(PROGRAMNAME);
     }
 }

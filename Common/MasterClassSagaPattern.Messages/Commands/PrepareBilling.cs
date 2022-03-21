@@ -1,14 +1,13 @@
 ﻿using MassTransit;
 using System;
 
-namespace MasterClassSagaPattern.Messages
+namespace MasterClassSagaPattern.Messages;
+
+public interface PrepareBilling : CorrelatedBy<Guid>
 {
-    public interface PrepareBilling : CorrelatedBy<Guid>
-    {
-        int Quantity { get; }
+    int Quantity { get; }
 
-        string Address { get; }
+    string Address { get; }
 
-        float Amount { get; }
-    }
+    float Amount { get; }
 }
